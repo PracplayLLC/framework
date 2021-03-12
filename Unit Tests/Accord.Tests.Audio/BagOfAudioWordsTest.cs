@@ -34,14 +34,19 @@ namespace Accord.Tests.Audio
     using Accord.Statistics.Analysis;
     using Accord.MachineLearning;
     using Accord.Statistics.Kernels;
+    using Accord.Audio.Formats;
+    using System;
 
     [TestFixture]
+    [Culture("")]
     public class BagOfAudioWordsTest
     {
         [Test]
         public void learn()
         {
-            string basePath = Path.Combine(NUnit.Framework.TestContext.CurrentContext.TestDirectory, "learn");
+            Type t = typeof(WaveEncoder);
+
+            string basePath = Path.Combine(NUnit.Framework.TestContext.CurrentContext.TestDirectory, "boaw");
 
             #region doc_learn
             // Ensure results are reproducible
@@ -61,7 +66,7 @@ namespace Accord.Tests.Audio
             // var bow = new BagOfAudioWords(numberOfWords: 10);
 
             // Get some training images
-            FreeSpokenDigitsDataset fsdd = new FreeSpokenDigitsDataset(basePath);
+            var fsdd = new FreeSpokenDigitsDataset(basePath);
             string[] trainFileNames = fsdd.Training.LocalPaths;
             int[] trainOutputs = fsdd.Training.Digits;
 
@@ -140,8 +145,8 @@ namespace Accord.Tests.Audio
             double testAcc = testMetrics.Accuracy; // should be around 0.8666666666666667
             #endregion
 
-            Assert.AreEqual(0.97259259259259256, trainAcc, 1e-8);
-            Assert.AreEqual(0.8666666666666667, testAcc, 1e-8);
+            Assert.AreEqual(0.977, trainAcc, 5e-3);
+            Assert.AreEqual(0.82, testAcc, 5e-3);
         }
     }
 }

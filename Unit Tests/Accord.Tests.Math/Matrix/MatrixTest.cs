@@ -33,6 +33,7 @@ namespace Accord.Tests.Math
     using Accord.IO;
 
     [TestFixture]
+    [SetCulture("")]
     public partial class MatrixTest
     {
 
@@ -284,6 +285,18 @@ namespace Accord.Tests.Math
         }
 
         [Test]
+        public void IntervalTest_float()
+        {
+            float from = -1;
+            float to = 1;
+            float stepSize = 0.2f;
+            float[] expected = { -1.0f, -0.8f, -0.6f, -0.4f, -0.2f, 0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
+            float[] actual = Matrix.Interval(from, to, stepSize);
+            float[] round = Matrix.Round(actual, 3);
+            Assert.IsTrue(Matrix.IsEqual(expected, round));
+        }
+
+        [Test]
         public void IntervalTestInverse()
         {
             double from = 1;
@@ -317,6 +330,17 @@ namespace Accord.Tests.Math
         #endregion
 
         #region Elementwise Operations
+        [Test]
+        public void ElementwiseSubtractTest()
+        {
+            short[] a = { 5, 2, 1 };
+            short[] b = { 3, 1, 2 };
+            short[] expected = { 2, 1, -1 };
+            short[] actual = Elementwise.Subtract(a, b);
+            Assert.IsTrue(Matrix.IsEqual(expected, actual));
+        }
+
+
         [Test]
         public void ElementwiseMultiplyTest()
         {
@@ -863,7 +887,7 @@ namespace Accord.Tests.Math
                 new double[] { 21.00,   0, 0 },
             };
 
-            double[][] actual = table.ToArray();
+            double[][] actual = table.ToJagged();
 
             Assert.IsTrue(expected.IsEqual(actual));
 
@@ -871,7 +895,7 @@ namespace Accord.Tests.Math
             string[] expectedNames = { "Double", "Integer", "Boolean" };
             string[] actualNames;
 
-            table.ToArray(out actualNames);
+            table.ToJagged(out actualNames);
 
             Assert.IsTrue(expectedNames.IsEqual(actualNames));
         }
@@ -3668,7 +3692,7 @@ namespace Accord.Tests.Math
         public void GetIndicesTest4()
         {
             double[][] v = Jagged.Ones(0, 3);
-            int[][] idx = v.GetIndices().ToArray();
+            int[][] idx = v.GetIndices().ToJagged();
             Assert.AreEqual(idx.Length, 0);
         }
 

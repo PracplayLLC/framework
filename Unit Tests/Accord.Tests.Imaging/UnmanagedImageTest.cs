@@ -16,7 +16,7 @@
 //    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 
-namespace Accord.Imaging.Tests
+namespace Accord.Tests.Imaging
 {
     using System;
     using System.Collections.Generic;
@@ -25,6 +25,7 @@ namespace Accord.Imaging.Tests
     using AForge;
     using Accord.Imaging;
     using NUnit.Framework;
+    using Accord.Math;
 
     [TestFixture]
     public class UnmanagedImageTest
@@ -436,6 +437,59 @@ namespace Accord.Imaging.Tests
             image.Dispose();
             bitmap.Dispose();
             temp.Dispose();
+        }
+
+        [TestCase(PixelFormat.Format8bppIndexed, 3, 3, 9)]
+        [TestCase(PixelFormat.Format8bppIndexed, 4, 5, 20)]
+        [TestCase(PixelFormat.Format8bppIndexed, 5, 4, 20)]
+        [TestCase(PixelFormat.Format8bppIndexed, 17, 13, 221)]
+        public void ToByteArray_test8pp(PixelFormat pixelFormat, int w, int h, int expected)
+        {
+            int[,] values = Vector.Range(0, 255).Get(0, h * w).Reshape(h, w);
+            UnmanagedImage image = values.ToBitmap().ToUnmanagedImage();
+
+            int formatBytes = pixelFormat.GetPixelFormatSizeInBytes();
+            byte[] b = image.ToByteArray();
+
+            Assert.AreEqual(w * h * formatBytes, b.Length);
+            Assert.AreEqual(expected, b.Length);
+
+            // Reconstruct the original matrix
+            UnmanagedImage r = UnmanagedImage.FromByteArray(b, w, h, pixelFormat);
+            byte[,] actual = r.ToManagedImage().ToMatrix(0, 0, 255);
+
+            Assert.AreEqual(values, actual);
+        }
+
+        [TestCase(PixelFormat.Format8bppIndexed, 3, 3, 9)]
+        [TestCase(PixelFormat.Format8bppIndexed, 4, 5, 20)]
+        [TestCase(PixelFormat.Format8bppIndexed, 5, 4, 20)]
+        [TestCase(PixelFormat.Format8bppIndexed, 17, 13, 221)]
+        [TestCase(PixelFormat.Format32bppArgb, 3, 3, 4 * 9)]
+        [TestCase(PixelFormat.Format32bppArgb, 4, 5, 4 * 20)]
+        [TestCase(PixelFormat.Format32bppArgb, 5, 4, 4 * 20)]
+        [TestCase(PixelFormat.Format24bppRgb, 3, 3, 3 * 9)]
+        [TestCase(PixelFormat.Format24bppRgb, 4, 5, 3 * 20)]
+        [TestCase(PixelFormat.Format24bppRgb, 5, 4, 3 * 20)]
+        public void ToByteArray_test_general(PixelFormat pixelFormat, int w, int h, int expected)
+        {
+            int c = pixelFormat.GetNumberOfChannels();
+            byte[,,] values = (byte[,,])Vector.Range((byte)0, (byte)255).Get(0, c * h * w).Reshape(new[] { h, w, c });
+            UnmanagedImage image = values.ToBitmap().ToUnmanagedImage();
+
+            int formatBytes = pixelFormat.GetPixelFormatSizeInBytes();
+            byte[] b = image.ToByteArray();
+
+            Assert.AreEqual(w * h * formatBytes, b.Length, "{0} * {1} * {2}, {3}", w, h, formatBytes, b.Length);
+            Assert.AreEqual(expected, b.Length, "{0}, {1}", expected, b.Length);
+
+            // Reconstruct the original matrix
+            UnmanagedImage r = UnmanagedImage.FromByteArray(b, w, h, pixelFormat);
+            byte[,,] actual = r.ToManagedImage().ToMatrix((byte)0, (byte)255);
+            string a = String.Join(" ", (string[])Accord.Math.Matrix.ToString(actual).DeepFlatten());
+            string e = String.Join(" ", (string[])Accord.Math.Matrix.ToString(values).DeepFlatten());
+
+            Assert.AreEqual(e, a, "{0} == {1}", e, a);
         }
     }
 }
